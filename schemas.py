@@ -1,18 +1,19 @@
 from pydantic import BaseModel
+from typing import Optional
 from datetime import datetime
 
-class Details(BaseModel):
+class OrderDetails(BaseModel):
     price: float
     description: str
     color: str
 
-class Products(BaseModel):
-    name: str
-    details: Details
+class OrderCreate(BaseModel):
+    product_name: str
+    details: OrderDetails
     stock: int
+    order_id: int
+    customer_id: int
 
-class ProductsGet(BaseModel):
-    name: str
-    details: Details
-    stock: int
+class OrderGet(OrderCreate):
     id: int
+    created_at: Optional[datetime]
