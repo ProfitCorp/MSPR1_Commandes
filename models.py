@@ -13,7 +13,7 @@ class OrderDB(Base):
 
     __tablename__ = "Orders"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     customer_id = Column(Integer, index=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -25,7 +25,7 @@ class ProductDB(Base):
 
     __tablename__ = "Products"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     order_id = Column(Integer, ForeignKey("Orders.id"))
     name = Column(String)
     price = Column(Float)
