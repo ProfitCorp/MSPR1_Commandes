@@ -1,65 +1,101 @@
+"""
+Contient la logique métier pour gérer les commandes et produits dans la base de données.
+"""
+
 from sqlalchemy.orm import Session
-from models import OrderDB
-from schemas import OrderCreate, OrderGet, OrderDetails
+from models import OrderDB, ProductDB
+from schemas import OrderCreate, OrderGet, ProductGet, ProductDetails
 
-# Récupérer toutes les commandes (chaque ligne = 1 produit dans une commande)
-def get_all_orders(db: Session):
-    orders = db.query(OrderDB).all()
-    return [itemdb_to_order(item) for item in orders]
 
-# Créer une ligne de commande
 def create_order(db: Session, order_data: OrderCreate):
-    db_order = OrderDB(
-        product_name=order_data.product_name,
-        price=order_data.details.price,
-        description=order_data.details.description,
-        color=order_data.details.color,
-        stock=order_data.stock,
-        order_id=order_data.order_id,
-        customer_id=order_data.customer_id
-    )
-    db.add(db_order)
+    """Crée une commande avec ses produits dans la base de données."""
+    order = OrderDB(customer_id=order_data.customer_id)
+    db.add(order)
     db.commit()
-    db.refresh(db_order)
-    return itemdb_to_order(db_order)
+    db.refresh(order)
 
-# Mettre à jour une ligne de commande
-def update_order(db: Session, item_id: int, order_data: OrderCreate):
-    db_order = db.query(OrderDB).filter(OrderDB.id == item_id).first()
-    if not db_order:
-        return None
-    db_order.product_name = order_data.product_name
-    db_order.price = order_data.details.price
-    db_order.description = order_data.details.description
-    db_order.color = order_data.details.color
-    db_order.stock = order_data.stock
-    db_order.order_id = order_data.order_id
-    db_order.customer_id = order_data.customer_id
-    db.commit()
-    db.refresh(db_order)
-    return db_order
-
-# Supprimer une ligne de commande
-def delete_order(db: Session, item_id: int):
-    db_order = db.query(OrderDB).filter(OrderDB.id == item_id).first()
-    if not db_order:
-        return None
-    db.delete(db_order)
-    db.commit()
-    return db_order
-
-# Convertir un ItemDB vers un schéma de réponse OrderGet
-def itemdb_to_order(item: OrderDB) -> OrderGet:
-    return OrderGet(
-        id=item.id,
-        order_id=item.order_id,
-        customer_id=item.customer_id,
-        product_name=item.product_name,
-        stock=item.stock,
-        created_at=item.created_at,
-        details=OrderDetails(
-            price=item.price,
-            description=item.description,
-            color=item.color
+    for product in order_data.products:
+        product_db = ProductDB(
+            name=product.name,
+            stock=product.stock,
+            price=product.details.price,
+            description=product.details.description,
+            color=product.details.color,
+            order_id=order.id,
         )
+        db.add(product_db)
+
+    db.commit()
+    return get_order_with_products(db, order.id)
+
+
+def get_order_with_products(db: Session, order_id: int):
+    """Retourne une commande complète avec ses produits."""
+    order = db.query(OrderDB).filter(OrderDB.id == order_id).first()
+    if not order:
+        return None
+
+    products = db.query(ProductDB).filter(ProductDB.order_id == order.id).all()
+
+    return OrderGet(
+        id=order.id,
+        customer_id=order.customer_id,
+        created_at=order.created_at,
+        products=[
+            ProductGet(
+                id=p.id,
+                name=p.name,
+                order_id=p.order_id,
+                stock=p.stock,
+                created_at=p.created_at,
+                details=ProductDetails(
+                    price=p.price, description=p.description, color=p.color
+                ),
+            )
+            for p in products
+        ],
     )
+
+
+def get_all_orders(db: Session):
+    """Retourne toutes les commandes avec leurs produits."""
+    orders = db.query(OrderDB).all()
+    return [get_order_with_products(db, order.id) for order in orders]
+
+
+def update_order(db: Session, order_id: int, order_data: OrderCreate):
+    """Met à jour une commande et remplace ses produits."""
+    order = db.query(OrderDB).filter(OrderDB.id == order_id).first()
+    if not order:
+        return None
+
+    db.query(ProductDB).filter(ProductDB.order_id == order_id).delete()
+
+    for product in order_data.products:
+        new_product = ProductDB(
+            name=product.name,
+            stock=product.stock,
+            price=product.details.price,
+            description=product.details.description,
+            color=product.details.color,
+            order_id=order_id,
+        )
+        db.add(new_product)
+
+    order.customer_id = order_data.customer_id
+    db.commit()
+    db.refresh(order)
+
+    return get_order_with_products(db, order_id)
+
+
+def delete_order(db: Session, order_id: int):
+    """Supprime une commande et tous ses produits associés."""
+    order = db.query(OrderDB).filter(OrderDB.id == order_id).first()
+    if not order:
+        return {"error": "Commande non trouvée"}
+
+    db.query(ProductDB).filter(ProductDB.order_id == order_id).delete()
+    db.delete(order)
+    db.commit()
+    return {"message": f"Commande {order_id} et ses produits supprimés"}
