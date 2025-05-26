@@ -1,3 +1,13 @@
+"""
+Tests des principales routes de l'API Orders :
+- POST /orders/
+- GET /orders/
+- PUT /orders/{order_id}
+- DELETE /orders/{order_id}
+
+Utilise une base SQLite temporaire pour isoler les tests.
+"""
+
 import os
 import pytest
 from fastapi.testclient import TestClient
@@ -15,6 +25,9 @@ TestingSessionLocal = sessionmaker(bind=engine)
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_db():
+    """
+    Initialise une base SQLite temporaire pour les tests, puis la supprime à la fin.
+    """
     Base.metadata.create_all(bind=engine)
     yield
     if os.path.exists(TEST_DB_FILE):
@@ -23,6 +36,9 @@ def setup_db():
 
 
 def override_get_db():
+    """
+    Surcharge la dépendance de base de données pour pointer vers la base de test.
+    """
     db = TestingSessionLocal()
     try:
         yield db
@@ -35,6 +51,9 @@ client = TestClient(app)
 
 
 def test_post_order():
+    """
+    Vérifie que l'API permet de créer une commande avec un produit (POST /orders/).
+    """
     payload = {
         "customer_id": 7,
         "products": [
@@ -51,12 +70,18 @@ def test_post_order():
 
 
 def test_get_orders():
+    """
+    Vérifie que l'API retourne la liste des commandes existantes (GET /orders/).
+    """
     response = client.get("/orders/")
     assert response.status_code == 200
     assert len(response.json()) >= 1
 
 
 def test_put_order():
+    """
+    Vérifie que l'API permet de modifier une commande existante (PUT /orders/{id}).
+    """
     payload = {
         "customer_id": 8,
         "products": [
@@ -73,5 +98,8 @@ def test_put_order():
 
 
 def test_delete_order():
+    """
+    Vérifie que l'API supprime correctement une commande (DELETE /orders/{id}).
+    """
     response = client.delete("/orders/1")
     assert response.status_code == 200

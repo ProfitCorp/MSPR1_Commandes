@@ -2,7 +2,7 @@ name: CI Orders
 
 on:
   push:
-    branches: [dev/sacha]  # CI uniquement quand TU pushes dans ta branche de travail
+    branches: [dev/sacha]  
 
 permissions:
   contents: write
