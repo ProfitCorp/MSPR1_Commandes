@@ -7,6 +7,7 @@ from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from database import Base
 
+
 # pylint: disable=too-few-public-methods
 class OrderDB(Base):
     """Modèle représentant une commande client."""
@@ -18,6 +19,7 @@ class OrderDB(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     products = relationship("ProductDB", back_populates="order", cascade="all, delete")
+
 
 # pylint: disable=too-few-public-methods
 class ProductDB(Base):

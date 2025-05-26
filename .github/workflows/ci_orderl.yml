@@ -1,0 +1,38 @@
+name: CI Orders
+
+on:
+  push:
+    branches: [dev/sacha]  # CI uniquement quand TU pushes dans ta branche de travail
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: Lint + Tests sur dev/sacha
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Configurer Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Installer les dépendances
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Linter
+        run: |
+          source venv/bin/activate
+          pylint --ignore=venv . | tee rapport_pylint.txt
+
+      - name: Tests unitaires
+        run: |
+          source venv/bin/activate
+          pytest test_orders.py
