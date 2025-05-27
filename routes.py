@@ -1,31 +1,35 @@
+"""
+Définit les 4 routes principales FastAPI pour gérer les commandes via API.
+"""
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from controllers import get_all_items, create_item, update_item, delete_item
 from database import get_db
-from models import ItemDB
-from schemas import *
+from controllers import create_order, get_all_orders, update_order, delete_order
+from schemas import OrderCreate, OrderGet
 
 router = APIRouter()
 
-@router.get("/items/", response_model=list[ProductsGet])
-def get_items(db: Session = Depends(get_db)):
-    return get_all_items(db)
 
-@router.post("/items/", response_model=Products)
-def add_item(item: Products, db: Session = Depends(get_db)):
-    new_item = create_item(db, item)
-    return create_item(db, item)
+@router.post("/orders/", response_model=OrderGet)
+def add_order(order: OrderCreate, db: Session = Depends(get_db)):
+    """Créer une nouvelle commande avec plusieurs produits."""
+    return create_order(db, order)
 
-@router.put("/items/{item_id}")
-def modify_item(item_id: int, item: Products, db: Session = Depends(get_db)):
-    updated_item = update_item(db, item_id, item)
-    if not updated_item:
-        return {"error": "Item non trouvé"}
-    return {"message": f"Item {item_id} mis à jour", "item": updated_item}
 
-@router.delete("/items/{item_id}")
-def remove_item(item_id: int, db: Session = Depends(get_db)):
-    deleted_item = delete_item(db, item_id)
-    if not deleted_item:
-        return {"error": "Item non trouvé"}
-    return {"message": f"Item {item_id} supprimé"}
+@router.get("/orders/", response_model=list[OrderGet])
+def get_orders(db: Session = Depends(get_db)):
+    """Récupérer toutes les commandes avec leurs produits."""
+    return get_all_orders(db)
+
+
+@router.put("/orders/{order_id}", response_model=OrderGet)
+def modify_order(order_id: int, order: OrderCreate, db: Session = Depends(get_db)):
+    """Mettre à jour une commande (et ses produits)."""
+    return update_order(db, order_id, order)
+
+
+@router.delete("/orders/{order_id}")
+def remove_order(order_id: int, db: Session = Depends(get_db)):
+    """Supprimer une commande ainsi que tous ses produits."""
+    return delete_order(db, order_id)
