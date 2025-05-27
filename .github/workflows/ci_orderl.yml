@@ -1,15 +1,19 @@
-name: CI Orders
+name: CI Orders Pre-release
 
 on:
-  push:
-    branches: [dev/sacha]  
+  pull_request:
+    branches:
+      - dev/main
+    types:
+      - closed
 
 permissions:
   contents: write
 
 jobs:
   test:
-    name: Lint + Tests sur dev/sacha
+    if: github.event.pull_request.merged == true
+    name: CI for dev/main
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +23,7 @@ jobs:
       - name: Configurer Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.13'  
 
       - name: Installer les dépendances
         run: |
@@ -32,7 +36,18 @@ jobs:
           source venv/bin/activate
           pylint --ignore=venv . | tee rapport_pylint.txt
 
-      - name: Tests unitaires
+      - name: Exécuter les tests
         run: |
           source venv/bin/activate
           pytest test_orders.py
+
+      - name: Créer une release GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: |
+            Nouvelle release générée automatiquement pour le tag **${{ github.ref_name }}**.
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
