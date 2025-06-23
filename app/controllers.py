@@ -1,7 +1,7 @@
 """
 Contient la logique métier pour gérer les commandes et produits dans la base de données.
 """
-
+from mq.publish import publish_order_update, publish_order_delete,publish_order_create
 from sqlalchemy.orm import Session
 from models import OrderDB, ProductDB
 from schemas import OrderCreate, OrderGet, ProductGet, ProductDetails
