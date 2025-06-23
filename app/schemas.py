@@ -27,7 +27,7 @@ class ProductGet(ProductCreate):
     """Produit retourné dans une réponse, avec infos complètes."""
 
     id: int
-    created_at: datetime
+    #created_at: datetime
     order_id: int
 
 
@@ -35,7 +35,7 @@ class OrderCreate(BaseModel):
     """Commande à créer, avec le client et les produits associés."""
 
     customer_id: int
-    products: List[ProductCreate]
+    products: List[int]
 
 
 class OrderGet(BaseModel):
@@ -43,5 +43,9 @@ class OrderGet(BaseModel):
 
     id: int
     customer_id: int
-    created_at: datetime
+    #created_at: datetime
     products: List[ProductGet]
+
+class LoginInput(BaseModel):
+    username: str
+    password: str
