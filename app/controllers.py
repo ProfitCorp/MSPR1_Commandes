@@ -26,16 +26,8 @@ def create_order(db: Session, order_data: OrderCreate):
         order.products.append(product_db)
         product_db.stock -= 1
 
-        stock_updates.append({
-            "product_id": product_db.id,
-            "stock": product_db.stock
-        })    
-
     db.commit()
     publish_order_create(order_data.dict())
-
-    for update in stock_updates:
-        publish_stock_update(update)
     
     return get_order_with_products(db, order.id)
 

@@ -49,18 +49,3 @@ def publish_order_delete(order_id: int):
     channel.basic_publish(exchange='orders.sync', routing_key='', body=message)
     print(f" [x] Suppression envoyée : {message}")
     connection.close()
-
-def publish_stock_update(stock_data: dict):
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-
-    channel.exchange_declare(exchange='stock.sync', exchange_type='fanout')
-
-    message = json.dumps({
-        "action": "stock_update",
-        "data": stock_data
-    })
-
-    channel.basic_publish(exchange='stock.sync', routing_key='', body=message)
-    print(f" [x] Stock update envoyée : {message}")
-    connection.close()
