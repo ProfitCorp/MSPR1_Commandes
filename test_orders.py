@@ -13,8 +13,8 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database import Base, get_db
-from main import app
+from app.database import Base, get_db
+from app.main import app
 
 # Base de données de test
 TEST_DB_FILE = "./test_orders.db"
