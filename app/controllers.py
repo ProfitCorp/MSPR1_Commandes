@@ -4,7 +4,7 @@ Contient la logique métier pour gérer les commandes et produits dans la base d
 from mq.publish import publish_order_update, publish_order_delete,publish_order_create
 from sqlalchemy.orm import Session
 from models import OrderDB, ProductDB
-from schemas import OrderCreate, OrderGet, ProductGet, ProductDetails
+from schemas import OrderCreate, OrderGet, ProductGet, ProductDetails, CustomerAddress, CustomerGet
 
 
 def create_order(db: Session, order_data: OrderCreate):
@@ -14,46 +14,56 @@ def create_order(db: Session, order_data: OrderCreate):
     db.commit()
     db.refresh(order)
 
-    for product in order_data.products:
-        product_db = ProductDB(
-            name=product.name,
-            stock=product.stock,
-            price=product.details.price,
-            description=product.details.description,
-            color=product.details.color,
-            order_id=order.id,
-        )
-        db.add(product_db)
+    for product_id in order_data.products:
+        product_db = db.query(ProductDB).get(product_id)
+        if product_db:
+            order.products.append(product_db)
+        
 
     db.commit()
+    publish_order_create(order_data.dict())
     return get_order_with_products(db, order.id)
 
 
 def get_order_with_products(db: Session, order_id: int):
-    """Retourne une commande complète avec ses produits."""
+    """Retourne une commande complète avec ses produits liés."""
     order = db.query(OrderDB).filter(OrderDB.id == order_id).first()
     if not order:
         return None
-
-    products = db.query(ProductDB).filter(ProductDB.order_id == order.id).all()
+    
+    customer = order.customer
+    customer_get = CustomerGet(
+        id=customer.id,
+        username=customer.username,
+        first_name=customer.firstname,
+        last_name=customer.lastname,
+        company_name=customer.company_name,
+        address=CustomerAddress(
+            street_number=customer.street_number,
+            street=customer.street,
+            postal_code=customer.postalcode,
+            city=customer.city
+        )
+    )
 
     return OrderGet(
         id=order.id,
-        customer_id=order.customer_id,
-        created_at=order.created_at,
+        customer=customer_get,
+        #created_at=order.created_at,
         products=[
             ProductGet(
                 id=p.id,
                 name=p.name,
-                order_id=p.order_id,
                 stock=p.stock,
-                created_at=p.created_at,
+                #created_at=p.created_at,
                 details=ProductDetails(
-                    price=p.price, description=p.description, color=p.color
-                ),
+                    price=p.price,
+                    description=p.description,
+                    color=p.color
+                )
             )
-            for p in products
-        ],
+            for p in order.products  # Utilisation directe de la relation
+        ]
     )
 
 
@@ -64,38 +74,39 @@ def get_all_orders(db: Session):
 
 
 def update_order(db: Session, order_id: int, order_data: OrderCreate):
-    """Met à jour une commande et remplace ses produits."""
+    """Met à jour une commande et remplace ses produits liés."""
     order = db.query(OrderDB).filter(OrderDB.id == order_id).first()
     if not order:
         return None
 
-    db.query(ProductDB).filter(ProductDB.order_id == order_id).delete()
+    # Supprimer les associations existantes
+    order.products = []
 
-    for product in order_data.products:
-        new_product = ProductDB(
-            name=product.name,
-            stock=product.stock,
-            price=product.details.price,
-            description=product.details.description,
-            color=product.details.color,
-            order_id=order_id,
-        )
-        db.add(new_product)
+    # Associer les nouveaux produits
+    products = db.query(ProductDB).filter(ProductDB.id.in_(order_data.products)).all()
+    order.products = products
 
+    # Mettre à jour le client
     order.customer_id = order_data.customer_id
+
     db.commit()
     db.refresh(order)
 
+    publish_order_update(order_id, order_data.dict())
     return get_order_with_products(db, order_id)
 
 
 def delete_order(db: Session, order_id: int):
-    """Supprime une commande et tous ses produits associés."""
     order = db.query(OrderDB).filter(OrderDB.id == order_id).first()
     if not order:
         return {"error": "Commande non trouvée"}
 
-    db.query(ProductDB).filter(ProductDB.order_id == order_id).delete()
+    # Supprimer les liens dans la table d'association
+    order.products = []
+
+    # Supprimer la commande
     db.delete(order)
     db.commit()
-    return {"message": f"Commande {order_id} et ses produits supprimés"}
+
+    publish_order_delete(order_id)
+    return {"message": f"Commande {order_id} supprimée"}

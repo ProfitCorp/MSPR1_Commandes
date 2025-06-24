@@ -1,7 +1,7 @@
 import pika
 import json
 
-def publish_order_create(order_id: int, data: dict):
+def publish_order_create(data: dict):
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
 
@@ -9,7 +9,6 @@ def publish_order_create(order_id: int, data: dict):
 
     message = json.dumps({
         "action": "create",
-        "order_id": order_id,
         "data": data
     })
 

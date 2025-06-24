@@ -6,6 +6,19 @@ from typing import List
 from datetime import datetime
 from pydantic import BaseModel
 
+class CustomerAddress(BaseModel):
+    street_number: str
+    street: str
+    postal_code: str
+    city: str
+
+class CustomerGet(BaseModel):
+    id: int
+    username: str
+    first_name: str
+    last_name: str
+    address: CustomerAddress
+    company_name: str
 
 class ProductDetails(BaseModel):
     """Détails d'un produit (prix, description, couleur)."""
@@ -28,7 +41,6 @@ class ProductGet(ProductCreate):
 
     id: int
     #created_at: datetime
-    order_id: int
 
 
 class OrderCreate(BaseModel):
@@ -42,10 +54,11 @@ class OrderGet(BaseModel):
     """Commande complète retournée dans une réponse API."""
 
     id: int
-    customer_id: int
+    customer: CustomerGet
     #created_at: datetime
     products: List[ProductGet]
 
 class LoginInput(BaseModel):
     username: str
     password: str
+
