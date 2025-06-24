@@ -1,7 +1,7 @@
 """
 Contient la logique métier pour gérer les commandes et produits dans la base de données.
 """
-from mq.publish import publish_order_update, publish_order_delete,publish_order_create
+from mq.publish import publish_order_update, publish_order_delete,publish_order_create, publish_stock_update
 from sqlalchemy.orm import Session
 from models import OrderDB, ProductDB
 from schemas import OrderCreate, OrderGet, ProductGet, ProductDetails, CustomerAddress, CustomerGet
@@ -14,14 +14,29 @@ def create_order(db: Session, order_data: OrderCreate):
     db.commit()
     db.refresh(order)
 
+    stock_updates = []
+
     for product_id in order_data.products:
-        product_db = db.query(ProductDB).get(product_id)
-        if product_db:
-            order.products.append(product_db)
-        
+        product_db = db.query(ProductDB).filter(ProductDB.id == product_id).first()
+        if product_db is None:
+            raise ValueError(f"Produit avec l'ID {product_id} introuvable")
+        if product_db.stock <= 0:
+            raise ValueError(f"Stock insuffisant pour le produit {product_db.name} (ID {product_id})")
+
+        order.products.append(product_db)
+        product_db.stock -= 1
+
+        stock_updates.append({
+            "product_id": product_db.id,
+            "stock": product_db.stock
+        })    
 
     db.commit()
     publish_order_create(order_data.dict())
+
+    for update in stock_updates:
+        publish_stock_update(update)
+    
     return get_order_with_products(db, order.id)
 
 
