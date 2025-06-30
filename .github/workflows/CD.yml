@@ -56,8 +56,8 @@ jobs:
       
       - name: Build image docker
         run: |
-          docker build -t customers-api .
-          docker tag customers-api customers-api:latest
+          docker build -t orders-api .
+          docker tag orders-api orders-api:latest
       
       - name: Run docker-compose with env vars
         run: |
