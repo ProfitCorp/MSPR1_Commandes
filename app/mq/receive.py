@@ -1,5 +1,6 @@
 import pika
 import json
+import os
 from database import SessionLocal
 from mq.db_function import create_user, update_user, delete_user, create_product, update_product, delete_product
 from logs.logger import setup_logger
@@ -7,7 +8,7 @@ from logs.logger import setup_logger
 logger = setup_logger()
 
 def receive_user_message():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv("MQ_HOST")))
     channel = connection.channel()
 
     channel.exchange_declare(exchange="users.sync", exchange_type="fanout")
@@ -58,7 +59,7 @@ def receive_user_message():
         connection.close()
 
 def receive_product_message():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv("MQ_HOST")))
     channel = connection.channel()
 
     channel.exchange_declare(exchange="products.sync", exchange_type="fanout")
