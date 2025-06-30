@@ -13,7 +13,6 @@ def publish_order_create(data: dict):
     })
 
     channel.basic_publish(exchange='orders.sync', routing_key='', body=message)
-    print(f" [x] Création envoyée : {message}")
     connection.close()
 
 
@@ -30,7 +29,6 @@ def publish_order_update(order_id: int, data: dict):
     })
 
     channel.basic_publish(exchange='orders.sync', routing_key='', body=message)
-    print(f" [x] Mise à jour envoyée : {message}")
     connection.close()
 
 
@@ -47,5 +45,4 @@ def publish_order_delete(order_id: int):
     })
 
     channel.basic_publish(exchange='orders.sync', routing_key='', body=message)
-    print(f" [x] Suppression envoyée : {message}")
     connection.close()

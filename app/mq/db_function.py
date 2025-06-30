@@ -16,12 +16,10 @@ def create_user(db, data):
     )
     db.add(new_user)
     db.commit()
-    print(f"[✓] Utilisateur {new_user.id} créé.")
 
 def update_user(db, user_id, data):
     user = db.query(CustomerDB).filter(CustomerDB.id == user_id).first()
     if not user:
-        print(f"[!] Utilisateur {user_id} non trouvé pour mise à jour.")
         return
 
     if "username" in data:
@@ -48,17 +46,14 @@ def update_user(db, user_id, data):
         user.company_name = data["companyName"]
 
     db.commit()
-    print(f"[✓] Utilisateur {user_id} mis à jour.")
 
 def delete_user(db, user_id):
     user = db.query(CustomerDB).filter(CustomerDB.id == user_id).first()
     if not user:
-        print(f"[!] Utilisateur {user_id} non trouvé pour suppression.")
         return
 
     db.delete(user)
     db.commit()
-    print(f"[✓] Utilisateur {user_id} supprimé.")
 
 def create_product(db, product_id, data):
     new_product = ProductDB(
@@ -71,12 +66,10 @@ def create_product(db, product_id, data):
     )
     db.add(new_product)
     db.commit()
-    print(f"[✓] Produit {product_id} créé.")
 
 def update_product(db, product_id, data):
     product = db.query(ProductDB).filter(ProductDB.id == product_id).first()
     if not product:
-        print(f"[!] Produit {product_id} non trouvé pour mise à jour.")
         return
 
     if "name" in data:
@@ -93,14 +86,11 @@ def update_product(db, product_id, data):
         product.stock = data["stock"]
 
     db.commit()
-    print(f"[✓] Produit {product_id} mis à jour.")
 
 def delete_product(db, product_id):
     product = db.query(ProductDB).filter(ProductDB.id == product_id).first()
     if not product:
-        print(f"[!] Produit {product_id} non trouvé pour suppression.")
         return
 
     db.delete(product)
-    db.commit()
-    print(f"[✓] Produit {product_id} supprimé.")        
+    db.commit() 

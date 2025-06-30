@@ -2,6 +2,9 @@ import pika
 import json
 from database import SessionLocal
 from mq.db_function import create_user, update_user, delete_user, create_product, update_product, delete_product
+from logs.logger import setup_logger
+
+logger = setup_logger()
 
 def receive_user_message():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
@@ -21,24 +24,24 @@ def receive_user_message():
             db = SessionLocal()
 
             if action == "create":
-                print(f"[x] Reçu création utilisateur : {data}")
+                logger.debug(f"[x] Reçu création utilisateur : {data}")
                 create_user(db, user_data)
 
             elif action == "update":
-                print(f"[x] Reçu mise à jour utilisateur : {data}")
+                logger.debug(f"[x] Reçu mise à jour utilisateur : {data}")
                 update_user(db, user_id, user_data)
 
             elif action == "delete":
-                print(f"[x] Reçu suppression utilisateur : {data}")
+                logger.debug(f"[x] Reçu suppression utilisateur : {data}")
                 delete_user(db, user_id)
 
             else:
-                print(f"[!] Action inconnue : {action}")
+                logger.debug(f"Unknow action {action}")
 
         except json.JSONDecodeError:
-            print("[!] Impossible de parser le message JSON")
+            logger.debug(json.JSONDecodeError)
         except Exception as e:
-            print(f"[!] Erreur : {e}")
+            logger.debug(e)
         finally:
             db.close()
 
@@ -47,10 +50,10 @@ def receive_user_message():
     channel.basic_consume(queue="api_orders_users", on_message_callback=callback)
 
     try:
-        print("[*] En attente de messages utilisateurs... Ctrl+C pour arrêter.")
+        logger.debug("[*] En attente de messages utilisateurs... Ctrl+C pour arrêter.")
         channel.start_consuming()
     except KeyboardInterrupt:
-        print("Arrêt du consumer.")
+        logger.info("Arrêt du consumer.")
         channel.stop_consuming()
         connection.close()
 
@@ -72,24 +75,24 @@ def receive_product_message():
             db = SessionLocal()
 
             if action == "create":
-                print(f"[x] Reçu création produit : {data}")
+                logger.debug(f"[x] Reçu création produit : {data}")
                 create_product(db, product_id, product_data)
 
             elif action == "update":
-                print(f"[x] Reçu mise à jour produit : {data}")
+                logger.debug(f"[x] Reçu mise à jour produit : {data}")
                 update_product(db, product_id, product_data)
 
             elif action == "delete":
-                print(f"[x] Reçu suppression produit : {data}")
+                logger.debug(f"[x] Reçu suppression produit : {data}")
                 delete_product(db, product_id)
 
             else:
-                print(f"[!] Action inconnue : {action}")
+                logger.debug(f"[!] Action inconnue : {action}")
 
         except json.JSONDecodeError:
-            print("[!] Impossible de parser le message JSON")
+            logger.debug(json.JSONDecodeError)
         except Exception as e:
-            print(f"[!] Erreur : {e}")
+            logger.debug(e)
         finally:
             db.close()
 
@@ -98,9 +101,9 @@ def receive_product_message():
     channel.basic_consume(queue="api_orders_products", on_message_callback=callback)
 
     try:
-        print("[*] En attente de messages produits... Ctrl+C pour arrêter.")
+        logger.debug("[*] En attente de messages produits... Ctrl+C pour arrêter.")
         channel.start_consuming()
     except KeyboardInterrupt:
-        print("Arrêt du consumer.")
+        logger.debug("Arrêt du consumer.")
         channel.stop_consuming()
         connection.close()

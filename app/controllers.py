@@ -1,7 +1,7 @@
 """
 Contient la logique métier pour gérer les commandes et produits dans la base de données.
 """
-from mq.publish import publish_order_update, publish_order_delete,publish_order_create, publish_stock_update
+from mq.publish import publish_order_update, publish_order_delete,publish_order_create
 from sqlalchemy.orm import Session
 from models import OrderDB, ProductDB
 from schemas import OrderCreate, OrderGet, ProductGet, ProductDetails, CustomerAddress, CustomerGet
@@ -20,11 +20,8 @@ def create_order(db: Session, order_data: OrderCreate):
         product_db = db.query(ProductDB).filter(ProductDB.id == product_id).first()
         if product_db is None:
             raise ValueError(f"Produit avec l'ID {product_id} introuvable")
-        if product_db.stock <= 0:
-            raise ValueError(f"Stock insuffisant pour le produit {product_db.name} (ID {product_id})")
 
         order.products.append(product_db)
-        product_db.stock -= 1
 
     db.commit()
     publish_order_create(order_data.dict())
@@ -56,20 +53,18 @@ def get_order_with_products(db: Session, order_id: int):
     return OrderGet(
         id=order.id,
         customer=customer_get,
-        #created_at=order.created_at,
         products=[
             ProductGet(
                 id=p.id,
                 name=p.name,
                 stock=p.stock,
-                #created_at=p.created_at,
                 details=ProductDetails(
                     price=p.price,
                     description=p.description,
                     color=p.color
                 )
             )
-            for p in order.products  # Utilisation directe de la relation
+            for p in order.products
         ]
     )
 
@@ -86,14 +81,11 @@ def update_order(db: Session, order_id: int, order_data: OrderCreate):
     if not order:
         return None
 
-    # Supprimer les associations existantes
     order.products = []
 
-    # Associer les nouveaux produits
     products = db.query(ProductDB).filter(ProductDB.id.in_(order_data.products)).all()
     order.products = products
 
-    # Mettre à jour le client
     order.customer_id = order_data.customer_id
 
     db.commit()
@@ -108,10 +100,8 @@ def delete_order(db: Session, order_id: int):
     if not order:
         return {"error": "Commande non trouvée"}
 
-    # Supprimer les liens dans la table d'association
     order.products = []
 
-    # Supprimer la commande
     db.delete(order)
     db.commit()
 

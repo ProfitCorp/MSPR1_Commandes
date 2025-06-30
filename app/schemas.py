@@ -40,7 +40,6 @@ class ProductGet(ProductCreate):
     """Produit retourné dans une réponse, avec infos complètes."""
 
     id: int
-    #created_at: datetime
 
 
 class OrderCreate(BaseModel):
@@ -55,7 +54,6 @@ class OrderGet(BaseModel):
 
     id: int
     customer: CustomerGet
-    #created_at: datetime
     products: List[ProductGet]
 
 class LoginInput(BaseModel):
