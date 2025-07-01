@@ -3,7 +3,7 @@ import json
 import os
 
 def publish_order_create(data: dict):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(os.getenv("MQ_HOST")))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(os.getenv("MQ_HOST", "localhost")))
     channel = connection.channel()
 
     channel.exchange_declare(exchange='orders.sync', exchange_type='fanout')
@@ -18,7 +18,7 @@ def publish_order_create(data: dict):
 
 
 def publish_order_update(order_id: int, data: dict):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(os.getenv("MQ_HOST")))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(os.getenv("MQ_HOST", "localhost")))
     channel = connection.channel()
 
     channel.exchange_declare(exchange='orders.sync', exchange_type='fanout')
@@ -34,7 +34,7 @@ def publish_order_update(order_id: int, data: dict):
 
 
 def publish_order_delete(order_id: int):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(os.getenv("MQ_HOST")))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(os.getenv("MQ_HOST", "localhost")))
     channel = connection.channel()
 
     channel.exchange_declare(exchange='orders.sync', exchange_type='fanout')

@@ -20,9 +20,15 @@ def add_order(order: OrderCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/orders/", dependencies=[Depends(JWTBearer())], response_model=list[OrderGet])
-def get_orders(db: Session = Depends(get_db)):
+def get_orders(db: Session = Depends(get_db), token_data: dict = Depends(JWTBearer())):
     """Récupérer toutes les commandes avec leurs produits."""
-    return get_all_orders(db)
+    role = token_data.get("role")
+    user_id = token_data.get("user_id")
+
+    if role == "admin":
+        return get_all_orders(db)
+    else:
+        return get_all_orders(db, user_id)
 
 
 @router.put("/orders/{order_id}", response_model=OrderGet)
@@ -43,7 +49,8 @@ def login_user(user: LoginInput):
         raise HTTPException(status_code=401)
 
     token = create_access_token({
-        "user": user.username,
+        "username": user.username,
+        "user_id": user.id,
         "role": user.role
         })
     return {"access_token": token, "token_type": "bearer"}

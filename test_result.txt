@@ -1,0 +1,80 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.3, pytest-8.3.5, pluggy-1.5.0
+rootdir: E:\Dev\MSPR1_Commandes\app
+plugins: anyio-4.9.0
+collected 5 items
+
+test.py ..F..                                                            [100%]
+
+================================== FAILURES ===================================
+______________________ test_get_orders_as_user_only_own _______________________
+
+    def test_get_orders_as_user_only_own():
+        headers_admin = auth_headers("admin", "admin", 1)
+        headers_user = auth_headers("user", "user", 2)
+    
+        client.post("/orders/", json={"customer_id": 1, "products": [1]}, headers=headers_admin)
+        client.post("/orders/", json={"customer_id": 2, "products": [2]}, headers=headers_admin)
+    
+        response = client.get("/orders/", headers=headers_admin)
+        assert response.status_code == 200
+        data = response.json()
+>       assert len(data) == 1
+E       AssertionError: assert 2 == 1
+E        +  where 2 = len([{'customer': {'address': {'city': 'SomeCity', 'postal_code': '12345', 'street': 'SomeStreet', 'street_number': '123'}...ils': {'color': 'Gris', 'description': 'Souris ergonomique', 'price': 25.0}, 'id': 2, 'name': 'Souris', 'stock': 50}]}])
+
+test.py:82: AssertionError
+---------------------------- Captured stdout call -----------------------------
+{'sub': 'admin', 'role': 'admin', 'user_id': 1, 'exp': 1751399574}
+{'sub': 'admin', 'role': 'admin', 'user_id': 1, 'exp': 1751399574}
+{'sub': 'admin', 'role': 'admin', 'user_id': 1, 'exp': 1751399574}
+{'sub': 'admin', 'role': 'admin', 'user_id': 1, 'exp': 1751399574}
+============================== warnings summary ===============================
+database.py:40
+  E:\Dev\MSPR1_Commandes\app\database.py:40: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    Base = declarative_base()
+
+main.py:26
+  E:\Dev\MSPR1_Commandes\app\main.py:26: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+..\..\Environnements\mspr_product\Lib\site-packages\fastapi\applications.py:4495
+  E:\Dev\Environnements\mspr_product\Lib\site-packages\fastapi\applications.py:4495: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)
+
+test.py::test_create_order_as_admin
+test.py::test_get_all_orders_as_admin
+test.py::test_get_orders_as_user_only_own
+test.py::test_get_orders_as_user_only_own
+test.py::test_update_order
+test.py::test_delete_order
+  E:\Dev\MSPR1_Commandes\app\auth\auth.py:26: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
+test.py::test_create_order_as_admin
+test.py::test_get_all_orders_as_admin
+test.py::test_get_orders_as_user_only_own
+test.py::test_get_orders_as_user_only_own
+test.py::test_update_order
+test.py::test_delete_order
+  E:\Dev\MSPR1_Commandes\app\controllers.py:27: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    publish_order_create(order_data.dict())
+
+test.py::test_update_order
+  E:\Dev\MSPR1_Commandes\app\controllers.py:98: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    publish_order_update(order_id, order_data.dict())
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED test.py::test_get_orders_as_user_only_own - AssertionError: assert 2 == 1
+================== 1 failed, 4 passed, 16 warnings in 13.85s ==================
