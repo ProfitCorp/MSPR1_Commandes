@@ -1,8 +1,9 @@
 import pika
 import json
+import os
 
 def publish_order_create(data: dict):
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(os.getenv("MQ_HOST", "localhost")))
     channel = connection.channel()
 
     channel.exchange_declare(exchange='orders.sync', exchange_type='fanout')
@@ -13,12 +14,11 @@ def publish_order_create(data: dict):
     })
 
     channel.basic_publish(exchange='orders.sync', routing_key='', body=message)
-    print(f" [x] Création envoyée : {message}")
     connection.close()
 
 
 def publish_order_update(order_id: int, data: dict):
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(os.getenv("MQ_HOST", "localhost")))
     channel = connection.channel()
 
     channel.exchange_declare(exchange='orders.sync', exchange_type='fanout')
@@ -30,12 +30,11 @@ def publish_order_update(order_id: int, data: dict):
     })
 
     channel.basic_publish(exchange='orders.sync', routing_key='', body=message)
-    print(f" [x] Mise à jour envoyée : {message}")
     connection.close()
 
 
 def publish_order_delete(order_id: int):
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(os.getenv("MQ_HOST", "localhost")))
     channel = connection.channel()
 
     channel.exchange_declare(exchange='orders.sync', exchange_type='fanout')
@@ -47,5 +46,4 @@ def publish_order_delete(order_id: int):
     })
 
     channel.basic_publish(exchange='orders.sync', routing_key='', body=message)
-    print(f" [x] Suppression envoyée : {message}")
     connection.close()
