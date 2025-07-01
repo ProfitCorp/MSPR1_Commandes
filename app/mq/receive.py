@@ -8,7 +8,7 @@ from logs.logger import setup_logger
 logger = setup_logger()
 
 def receive_user_message():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv("MQ_HOST")))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv("MQ_HOST", "localhost")))
     channel = connection.channel()
 
     channel.exchange_declare(exchange="users.sync", exchange_type="fanout")
@@ -59,7 +59,7 @@ def receive_user_message():
         connection.close()
 
 def receive_product_message():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv("MQ_HOST")))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv("MQ_HOST", "localhost")))
     channel = connection.channel()
 
     channel.exchange_declare(exchange="products.sync", exchange_type="fanout")

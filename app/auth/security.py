@@ -18,8 +18,7 @@ class JWTBearer(HTTPBearer):
             print(payload)
             if not payload:
                 raise HTTPException(status_code=403, detail="Invalid token or expired token")
-            elif payload.get("role") != "admin":
-                raise HTTPException(status_code=403, detail="You don't have admin privilege")
+            return payload
         else:
             raise HTTPException(status_code=403, detail="Invalid authorization code")
 
