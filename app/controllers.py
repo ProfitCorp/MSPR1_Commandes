@@ -11,6 +11,7 @@ def create_order(db: Session, order_data: OrderCreate):
     """Crée une commande avec ses produits dans la base de données."""
     order = OrderDB(customer_id=order_data.customer_id)
     db.add(order)
+    publish_order_create(order_data.dict())
     db.commit()
     db.refresh(order)
 
@@ -24,7 +25,6 @@ def create_order(db: Session, order_data: OrderCreate):
         order.products.append(product_db)
 
     db.commit()
-    publish_order_create(order_data.dict())
     
     return get_order_with_products(db, order.id)
 
@@ -92,10 +92,11 @@ def update_order(db: Session, order_id: int, order_data: OrderCreate):
 
     order.customer_id = order_data.customer_id
 
+    publish_order_update(order_id, order_data.dict())
     db.commit()
     db.refresh(order)
 
-    publish_order_update(order_id, order_data.dict())
+    
     return get_order_with_products(db, order_id)
 
 
@@ -107,7 +108,6 @@ def delete_order(db: Session, order_id: int):
     order.products = []
 
     db.delete(order)
-    db.commit()
-
     publish_order_delete(order_id)
+    db.commit()
     return {"message": f"Commande {order_id} supprimée"}
