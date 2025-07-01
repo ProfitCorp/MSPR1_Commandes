@@ -3,7 +3,7 @@ Contient la logique métier pour gérer les commandes et produits dans la base d
 """
 from mq.publish import publish_order_update, publish_order_delete,publish_order_create
 from sqlalchemy.orm import Session
-from models import OrderDB, ProductDB
+from models import OrderDB, ProductDB, CustomerDB
 from schemas import OrderCreate, OrderGet, ProductGet, ProductDetails, CustomerAddress, CustomerGet
 
 
@@ -69,9 +69,13 @@ def get_order_with_products(db: Session, order_id: int):
     )
 
 
-def get_all_orders(db: Session):
+def get_all_orders(db: Session, user_id=None):
     """Retourne toutes les commandes avec leurs produits."""
-    orders = db.query(OrderDB).all()
+    if user_id:
+        orders = db.query(OrderDB).join(OrderDB.customer).filter(CustomerDB.id == user_id).all()
+    else:
+        orders = db.query(OrderDB).all()
+    
     return [get_order_with_products(db, order.id) for order in orders]
 
 
